@@ -6,12 +6,12 @@ import os
 
 
 class PDFProcessor:
-    def __init__(self, chunk_size: int = 3000, chunk_overlap: int = 200):
+    def __init__(self, chunk_size: int = 4000, chunk_overlap: int = 150):
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap
 
     def load_from_bytes(self, file_bytes: bytes, filename: str) -> List[Any]:
-        """Save uploaded bytes to a temp file and load with PyMuPDF."""
+        """Load PDF from bytes using a temporary file."""
         with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
             tmp.write(file_bytes)
             tmp_path = tmp.name
@@ -19,19 +19,25 @@ class PDFProcessor:
         try:
             loader = PyMuPDFLoader(tmp_path)
             documents = loader.load()
-            print(f"[INFO] Loaded {len(documents)} pages from '{filename}'.")
+            print(f"[INFO] Loaded {len(documents)} pages from '{filename}'")
             return documents
         finally:
-            os.remove(tmp_path)
+            if os.path.exists(tmp_path):
+                os.remove(tmp_path)
 
     def chunk_documents(self, documents: List[Any]) -> List[Any]:
-        """Split documents into chunks for summarization."""
+        """Split documents into overlapping chunks."""
+        if not documents:
+            return []
+
         splitter = RecursiveCharacterTextSplitter(
             chunk_size=self.chunk_size,
             chunk_overlap=self.chunk_overlap,
             length_function=len,
-            separators=["\n\n", "\n", " ", ""]
+            separators=["\n\n", "\n", ". ", " ", ""],
+            keep_separator=True
         )
+        
         chunks = splitter.split_documents(documents)
-        print(f"[INFO] Split {len(documents)} pages into {len(chunks)} chunks.")
+        print(f"[INFO] Split into {len(chunks)} chunks")
         return chunks
