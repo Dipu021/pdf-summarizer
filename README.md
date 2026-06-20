@@ -23,7 +23,8 @@ pip install -r requirements.txt
 ### 2. Install and start Ollama
 ```bash
 # Install Ollama from https://ollama.com
-ollama pull llama3
+ollama pull llama3.2:3b
+ollama pull gemma2:2b
 ollama serve
 ```
 
